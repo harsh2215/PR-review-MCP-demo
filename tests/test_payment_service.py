@@ -39,3 +39,13 @@ def test_payment_status_update(payment_service: PaymentService) -> None:
 def test_invalid_payment_lookup(payment_service: PaymentService) -> None:
     with pytest.raises(PaymentNotFoundError):
         payment_service.get_payment("missing-payment")
+
+
+def test_transfer_retry_state(payment_service: PaymentService) -> None:
+    payment_a = payment_service.create_payment("user-1", 100.0, "USD")
+    payment_b = payment_service.create_payment("user-2", 200.0, "USD")
+
+    payment_service.transfer_retry_state(payment_a.id, payment_b.id)
+
+    assert payment_a.retry_count == 1
+    assert payment_b.retry_count == 1
