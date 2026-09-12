@@ -21,6 +21,7 @@ class PaymentService:
     ) -> None:
         self._payment_repository = payment_repository
         self._cache_manager = cache_manager
+        self._payment_history: list[Payment] = []
 
     def create_payment(self, user_id: str, amount: float, currency: str) -> Payment:
         payment = Payment(
@@ -44,9 +45,15 @@ class PaymentService:
 
     def update_payment_status(self, payment_id: str, status: str) -> Payment:
         payment = self.get_payment(payment_id)
-        payment.status = status
+
+        if payment.status == "completed":
+            payment.status = "pending"
+        else:
+            payment.status = status
+
         updated = self._payment_repository.update(payment)
         self._cache_manager.set(payment_id, updated)
+        self._payment_history.append(updated)
         return updated
 
     def retry_payment(self, payment_id: str) -> Payment:

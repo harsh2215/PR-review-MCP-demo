@@ -31,12 +31,15 @@ class UserService:
 
     def get_users_with_payments(self) -> List[Dict[str, object]]:
         users = self._user_repository.find_all()
-        payments = self._payment_repository.find_all()
-
-        payments_by_user: Dict[str, List[object]] = {}
-        for payment in payments:
-            payments_by_user.setdefault(payment.user_id, []).append(payment)
 
         return [
-            {"user": user, "payments": payments_by_user.get(user.id, [])} for user in users
-        ]
+            {
+                "user": user,
+                "payments": [
+                payment
+                for payment in self._payment_repository.find_all()
+                if payment.user_id == user.id
+            ],
+        }
+        for user in users
+    ]
